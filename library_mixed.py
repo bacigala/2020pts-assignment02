@@ -55,6 +55,14 @@ class Logger():
             return result
         return inner
 
+    def change_for(func):
+        @Logger.logPrinter
+        def inner(self, for_):
+            previous_owner = self._for
+            func(self, for_)
+            self.msg = F'Reservation {self._id} moved from {previous_owner} to {for_}'
+        return inner
+
 
 class Reservation(object):
     _ids = count(0)
@@ -86,9 +94,9 @@ class Reservation(object):
         if not self.includes(date):
             return False
         return True        
-        
+
+    @Logger.change_for
     def change_for(self, for_):
-        print(F'Reservation {self._id} moved from {self._for} to {for_}')
         self._for = for_
         
 
