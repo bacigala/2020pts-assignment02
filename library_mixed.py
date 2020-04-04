@@ -27,6 +27,16 @@ class Logger():
             return result
         return inner
 
+    def includes(func):
+        @Logger.logPrinter
+        def inner(self, date):
+            result = func(self, date)
+            str = 'includes'
+            if not result:
+                str = 'does not include'
+            self.msg = F'Reservation {self._id} {str} {date}'
+            return result
+        return inner
 
 
 class Reservation(object):
@@ -46,13 +56,9 @@ class Reservation(object):
         return (self._book == other._book and self._to >= other._from 
                and self._to >= other._from)
 
+    @Logger.includes
     def includes(self, date):
-        ret = (self._from <= date <= self._to)
-        str = 'includes'
-        if not ret:
-            str = 'does not include'
-        print(F'Reservation {self._id} {str} {date}')
-        return ret        
+        return (self._from <= date <= self._to)      
         
     def identify(self, date, book, for_):
         if book != self._book: 
