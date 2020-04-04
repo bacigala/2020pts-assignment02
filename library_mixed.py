@@ -38,6 +38,23 @@ class Logger():
             return result
         return inner
 
+    def identify(func):
+        @Logger.logPrinter
+        def inner(self, date, book, for_):
+            result = func(self, date, book, for_)
+            if result:
+                self.msg = F'Reservation {self._id} is valid {for_} of {book} on {date}.'
+            else:
+                if book != self._book: 
+                    self.msg = F'Reservation {self._id} reserves {self._book} not {book}.'
+                elif for_!=self._for:
+                    self.msg = F'Reservation {self._id} is for {self._for} not {for_}.'
+                elif not self.includes(date):
+                    self.msg = F'Reservation {self._id} is from {self._from} to {self._to} which '
+                    self.msg += F'does not include {date}.'
+            return result
+        return inner
+
 
 class Reservation(object):
     _ids = count(0)
@@ -59,19 +76,15 @@ class Reservation(object):
     @Logger.includes
     def includes(self, date):
         return (self._from <= date <= self._to)      
-        
+
+    @Logger.identify        
     def identify(self, date, book, for_):
         if book != self._book: 
-            print(F'Reservation {self._id} reserves {self._book} not {book}.')
             return False
         if for_!=self._for:
-            print(F'Reservation {self._id} is for {self._for} not {for_}.')
             return False
         if not self.includes(date):
-            print(F'Reservation {self._id} is from {self._from} to {self._to} which '+
-                  F'does not include {date}.')
             return False
-        print(F'Reservation {self._id} is valid {for_} of {book} on {date}.')
         return True        
         
     def change_for(self, for_):
