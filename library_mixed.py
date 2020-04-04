@@ -1,8 +1,25 @@
 from itertools import count
 
+class Logger():
+    def logPrinter(func):
+         def inner(self, *args, **kwargs):
+             func(self, *args, *kwargs)
+             print(self.msg)
+         return inner
+   
+    def init(func):
+        @Logger.logPrinter
+        def inner(self, *args, **kwargs):
+            func(self, *args, **kwargs)
+            self.msg = F'Created a reservation with id {self._id} of {self._book} '
+            self.msg += F'from {self._from} to {self._to} for {self._for}.'
+        return inner
+
+
 class Reservation(object):
     _ids = count(0)
     
+    @Logger.init
     def __init__(self, from_, to, book, for_):
         self._id = next(Reservation._ids)
         self._from = from_
@@ -10,8 +27,6 @@ class Reservation(object):
         self._book = book
         self._for = for_
         self._changes = 0
-        print(F'Created a reservation with id {self._id} of {self._book} '+
-              F'from {self._from} to {self._to} for {self._for}.')
 
     def overlapping(self, other):
         ret = (self._book == other._book and self._to >= other._from 
