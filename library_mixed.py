@@ -3,8 +3,9 @@ from itertools import count
 class Logger():
     def logPrinter(func):
          def inner(self, *args, **kwargs):
-             func(self, *args, *kwargs)
+             result = func(self, *args, *kwargs)
              print(self.msg)
+             return result
          return inner
    
     def init(func):
@@ -14,6 +15,18 @@ class Logger():
             self.msg = F'Created a reservation with id {self._id} of {self._book} '
             self.msg += F'from {self._from} to {self._to} for {self._for}.'
         return inner
+
+    def overlapping(func):
+        @Logger.logPrinter
+        def inner(self, other):
+            result = func(self, other)
+            str = 'do'
+            if not result:
+                str = 'do not'
+            self.msg = F'Reservations {self._id} and {other._id} {str} overlap'
+            return result
+        return inner
+
 
 
 class Reservation(object):
@@ -28,15 +41,11 @@ class Reservation(object):
         self._for = for_
         self._changes = 0
 
+    @Logger.overlapping
     def overlapping(self, other):
-        ret = (self._book == other._book and self._to >= other._from 
+        return (self._book == other._book and self._to >= other._from 
                and self._to >= other._from)
-        str = 'do'
-        if not ret:
-            str = 'do not'
-        print(F'Reservations {self._id} and {other._id} {str} overlap')
-        return ret
-            
+
     def includes(self, date):
         ret = (self._from <= date <= self._to)
         str = 'includes'
