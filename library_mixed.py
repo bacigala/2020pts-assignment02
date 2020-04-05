@@ -1,13 +1,17 @@
 from itertools import count
 
 class Logger():
+    # Prints all log messages
     def logPrinter(func):
          def inner(self, *args, **kwargs):
              result = func(self, *args, *kwargs)
              print(self.msg)
              return result
          return inner
-   
+
+
+    # String-constructing decorators for Reservation functions
+
     def ReservationInit(func):
         @Logger.logPrinter
         def inner(self, *args, **kwargs):
@@ -64,6 +68,34 @@ class Logger():
         return inner
 
 
+    # String-constructing decorators for Library functions
+
+    def LibraryInit(func):
+        @Logger.logPrinter
+        def inner(self, *args, **kwargs):
+            func(self, *args, **kwargs)
+            self.msg = F'Library created.'
+        return inner
+
+    def LibraryAdd_user(func):
+        @Logger.logPrinter
+        def inner(self, name):
+            result = func(self, name)
+            self.msg = F'User {name} created.'
+            if not result:
+                self.msg = F'User not created, user with name {name} already exists.'
+            return result
+        return inner
+
+    def LibraryAdd_book(func):
+        @Logger.logPrinter
+        def inner(self, name):
+            func(self, name)
+            self.msg = F'Book {name} added. We have {self._books[name]} coppies of the book.'
+        return inner
+
+
+
 class Reservation(object):
     _ids = count(0)
     
@@ -101,23 +133,22 @@ class Reservation(object):
         
 
 class Library(object):
+    @Logger.LibraryInit
     def __init__(self):
         self._users = set()
         self._books = {}   #maps name to count
         self._reservations = [] #Reservations sorted by from
-        print(F'Library created.')
-                
+
+    @Logger.LibraryAdd_user
     def add_user(self, name):
         if name in self._users:
-            print(F'User not created, user with name {name} already exists.')
             return False
         self._users.add(name)
-        print(F'User {name} created.')
         return True
 
+    @Logger.LibraryAdd_book
     def add_book(self, name):
         self._books[name] = self._books.get(name, 0) + 1
-        print(F'Book {name} added. We have {self._books[name]} coppies of the book.')
 
     def reserve_book(self, user, book, date_from, date_to):
         book_count = self._books.get(book, 0)
