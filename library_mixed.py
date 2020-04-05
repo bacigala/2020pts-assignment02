@@ -8,7 +8,7 @@ class Logger():
              return result
          return inner
    
-    def init(func):
+    def ReservationInit(func):
         @Logger.logPrinter
         def inner(self, *args, **kwargs):
             func(self, *args, **kwargs)
@@ -16,7 +16,7 @@ class Logger():
             self.msg += F'from {self._from} to {self._to} for {self._for}.'
         return inner
 
-    def overlapping(func):
+    def ReservationOverlapping(func):
         @Logger.logPrinter
         def inner(self, other):
             result = func(self, other)
@@ -27,7 +27,7 @@ class Logger():
             return result
         return inner
 
-    def includes(func):
+    def ReservationIncludes(func):
         @Logger.logPrinter
         def inner(self, date):
             result = func(self, date)
@@ -38,7 +38,7 @@ class Logger():
             return result
         return inner
 
-    def identify(func):
+    def ReservationIdentify(func):
         @Logger.logPrinter
         def inner(self, date, book, for_):
             result = func(self, date, book, for_)
@@ -55,7 +55,7 @@ class Logger():
             return result
         return inner
 
-    def change_for(func):
+    def ReservationChange_for(func):
         @Logger.logPrinter
         def inner(self, for_):
             previous_owner = self._for
@@ -67,7 +67,7 @@ class Logger():
 class Reservation(object):
     _ids = count(0)
     
-    @Logger.init
+    @Logger.ReservationInit
     def __init__(self, from_, to, book, for_):
         self._id = next(Reservation._ids)
         self._from = from_
@@ -76,16 +76,16 @@ class Reservation(object):
         self._for = for_
         self._changes = 0
 
-    @Logger.overlapping
+    @Logger.ReservationOverlapping
     def overlapping(self, other):
         return (self._book == other._book and self._to >= other._from 
                and self._to >= other._from)
 
-    @Logger.includes
+    @Logger.ReservationIncludes
     def includes(self, date):
         return (self._from <= date <= self._to)      
 
-    @Logger.identify        
+    @Logger.ReservationIdentify        
     def identify(self, date, book, for_):
         if book != self._book: 
             return False
@@ -95,7 +95,7 @@ class Reservation(object):
             return False
         return True        
 
-    @Logger.change_for
+    @Logger.ReservationChange_for
     def change_for(self, for_):
         self._for = for_
         
