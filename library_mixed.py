@@ -127,8 +127,18 @@ class Logger():
             return result
         return inner
     
-
-
+    def LibraryChange_reservation(func):
+        @Logger.logPrinter
+        def inner(self, user, book, date, new_user):
+            result = func(self, user, book, date, new_user)
+            if result:
+                self.msg = F'Reservation for {user} of {book} on {date} changed to {new_user}.'
+            elif new_user not in self._users:
+                self.msg = F'Cannot change the reservation as {new_user} does not exist.'
+            else:
+                self.msg = F'Reservation for {user} of {book} on {date} does not exist.'
+            return result
+        return inner
 
 
 class Reservation(object):
@@ -211,17 +221,14 @@ class Library(object):
     def check_reservation(self, user, book, date):
         return any([res.identify(date, book, user) for res in self._reservations])        
 
+    @Logger.LibraryChange_reservation
     def change_reservation(self, user, book, date, new_user):
         relevant_reservations = [res for res in self._reservations 
                                      if res.identify(date, book, user)]
         if not relevant_reservations:        
-            print(F'Reservation for {user} of {book} on {date} does not exist.')
             return False
         if new_user not in self._users:
-            print(F'Cannot change the reservation as {new_user} does not exist.')
-            return False
-            
-        print(F'Reservation for {user} of {book} on {date} changed to {new_user}.')        
+            return False       
         relevant_reservations[0].change_for(new_user)
         return True
-        
+
