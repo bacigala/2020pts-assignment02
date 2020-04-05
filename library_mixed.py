@@ -4,7 +4,7 @@ class Logger():
     # Prints all log messages
     def logPrinter(func):
          def inner(self, *args, **kwargs):
-             result = func(self, *args, *kwargs)
+             result = func(self, *args, **kwargs)
              print(self.msg)
              return result
          return inner
@@ -116,6 +116,19 @@ class Logger():
             return result
         return inner
 
+    def LibraryCheck_reservation(func):
+        @Logger.logPrinter
+        def inner(self, user, book, date):
+            result = func(self, user, book, date)
+            str = 'exists'
+            if not result:
+                str = 'does not exist'
+            self.msg = F'Reservation for {user} of {book} on {date} {str}.'
+            return result
+        return inner
+    
+
+
 
 
 class Reservation(object):
@@ -194,13 +207,9 @@ class Library(object):
         self._reservations.sort(key=lambda x:x._from) #to lazy to make a getter
         return desired_reservation._id
 
+    @Logger.LibraryCheck_reservation
     def check_reservation(self, user, book, date):
-        res = any([res.identify(date, book, user) for res in self._reservations])
-        str = 'exists'
-        if not res:
-            str = 'does not exist'
-        print(F'Reservation for {user} of {book} on {date} {str}.')
-        return res        
+        return any([res.identify(date, book, user) for res in self._reservations])        
 
     def change_reservation(self, user, book, date, new_user):
         relevant_reservations = [res for res in self._reservations 
