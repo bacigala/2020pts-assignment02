@@ -94,6 +94,28 @@ class Logger():
             self.msg = F'Book {name} added. We have {self._books[name]} coppies of the book.'
         return inner
 
+    def LibraryReserve_book(func):
+        @Logger.logPrinter
+        def inner(self, user, book, date_from, date_to):
+            result = func(self, user, book, date_from, date_to)
+            if result >= 0:
+                self.msg = F'Reservation {result} included.'
+            else:
+                if user not in self._users: 
+                    self.msg = F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '
+                    self.msg += F'User does not exist.'
+                elif date_from > date_to:
+                    self.msg = F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '
+                    self.msg += F'Incorrect dates.'
+                elif self._books.get(book, 0) == 0:
+                    self.msg = F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '
+                    self.msg += F'We do not have that book.'
+                else:
+                   self.msg = F'We cannot reserve book {book} for {user} from {date_from} '
+                   self.msg += F'to {date_to}. We do not have enough books.' 
+            return result
+        return inner
+
 
 
 class Reservation(object):
@@ -150,20 +172,15 @@ class Library(object):
     def add_book(self, name):
         self._books[name] = self._books.get(name, 0) + 1
 
+    @Logger.LibraryReserve_book
     def reserve_book(self, user, book, date_from, date_to):
         book_count = self._books.get(book, 0)
         if user not in self._users:
-            print(F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '+
-                  F'User does not exist.')
-            return False
+            return -1
         if date_from > date_to:
-            print(F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '+
-                  F'Incorrect dates.')
-            return False
+            return -1
         if book_count == 0:
-            print(F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '+
-                  F'We do not have that book.')
-            return False
+            return -1
         desired_reservation = Reservation(date_from, date_to, book, user)
         relevant_reservations = [res for res in self._reservations
                                  if desired_reservation.overlapping(res)] + [desired_reservation]
@@ -172,13 +189,10 @@ class Library(object):
         for from_ in [res._from for res in relevant_reservations]:
             if desired_reservation.includes(from_):
                 if sum([rec.includes(from_) for rec in relevant_reservations]) > book_count:
-                    print(F'We cannot reserve book {book} for {user} from {date_from} '+
-                          F'to {date_to}. We do not have enough books.')
-                    return False
+                    return -1
         self._reservations+=[desired_reservation]
         self._reservations.sort(key=lambda x:x._from) #to lazy to make a getter
-        print(F'Reservation {desired_reservation._id} included.')
-        return True
+        return desired_reservation._id
 
     def check_reservation(self, user, book, date):
         res = any([res.identify(date, book, user) for res in self._reservations])
