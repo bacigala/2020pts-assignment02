@@ -156,7 +156,7 @@ class Reservation(object):
     @Logger.ReservationOverlapping
     def overlapping(self, other):
         return (self._book == other._book and self._to >= other._from 
-               and self._to >= other._from)
+               and self._from <= other._to)
 
     @Logger.ReservationIncludes
     def includes(self, date):
