@@ -113,9 +113,7 @@ class Logger():
                 else:
                    self.msg = F'We cannot reserve book {book} for {user} from {date_from} '
                    self.msg += F'to {date_to}. We do not have enough books.' 
-            if result >= 0:
-                return True
-            return False
+            return result
         return inner
 
     def LibraryCheck_reservation(func):
