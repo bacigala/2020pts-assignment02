@@ -1,11 +1,14 @@
 from itertools import count
 
 class Logger():
+
+    msg = ''
+
     # Prints all log messages
     def logPrinter(func):
          def inner(self, *args, **kwargs):
              result = func(self, *args, **kwargs)
-             print(self.msg)
+             print(Logger.msg)
              return result
          return inner
 
@@ -16,8 +19,8 @@ class Logger():
         @Logger.logPrinter
         def inner(self, *args, **kwargs):
             func(self, *args, **kwargs)
-            self.msg = F'Created a reservation with id {self._id} of {self._book} '
-            self.msg += F'from {self._from} to {self._to} for {self._for}.'
+            Logger.msg = F'Created a reservation with id {self._id} of {self._book} '
+            Logger.msg += F'from {self._from} to {self._to} for {self._for}.'
         return inner
 
     def ReservationOverlapping(func):
@@ -27,7 +30,7 @@ class Logger():
             str = 'do'
             if not result:
                 str = 'do not'
-            self.msg = F'Reservations {self._id} and {other._id} {str} overlap'
+            Logger.msg = F'Reservations {self._id} and {other._id} {str} overlap'
             return result
         return inner
 
@@ -38,7 +41,7 @@ class Logger():
             str = 'includes'
             if not result:
                 str = 'does not include'
-            self.msg = F'Reservation {self._id} {str} {date}'
+            Logger.msg = F'Reservation {self._id} {str} {date}'
             return result
         return inner
 
@@ -47,15 +50,15 @@ class Logger():
         def inner(self, date, book, for_):
             result = func(self, date, book, for_)
             if result:
-                self.msg = F'Reservation {self._id} is valid {for_} of {book} on {date}.'
+                Logger.msg = F'Reservation {self._id} is valid {for_} of {book} on {date}.'
             else:
                 if book != self._book: 
-                    self.msg = F'Reservation {self._id} reserves {self._book} not {book}.'
+                    Logger.msg = F'Reservation {self._id} reserves {self._book} not {book}.'
                 elif for_!=self._for:
-                    self.msg = F'Reservation {self._id} is for {self._for} not {for_}.'
+                    Logger.msg = F'Reservation {self._id} is for {self._for} not {for_}.'
                 elif not self.includes(date):
-                    self.msg = F'Reservation {self._id} is from {self._from} to {self._to} which '
-                    self.msg += F'does not include {date}.'
+                    Logger.msg = F'Reservation {self._id} is from {self._from} to {self._to} which '
+                    Logger.msg += F'does not include {date}.'
             return result
         return inner
 
@@ -64,7 +67,7 @@ class Logger():
         def inner(self, for_):
             previous_owner = self._for
             func(self, for_)
-            self.msg = F'Reservation {self._id} moved from {previous_owner} to {for_}'
+            Logger.msg = F'Reservation {self._id} moved from {previous_owner} to {for_}'
         return inner
 
 
@@ -74,16 +77,16 @@ class Logger():
         @Logger.logPrinter
         def inner(self, *args, **kwargs):
             func(self, *args, **kwargs)
-            self.msg = F'Library created.'
+            Logger.msg = F'Library created.'
         return inner
 
     def LibraryAdd_user(func):
         @Logger.logPrinter
         def inner(self, name):
             result = func(self, name)
-            self.msg = F'User {name} created.'
+            Logger.msg = F'User {name} created.'
             if not result:
-                self.msg = F'User not created, user with name {name} already exists.'
+                Logger.msg = F'User not created, user with name {name} already exists.'
             return result
         return inner
 
@@ -91,7 +94,7 @@ class Logger():
         @Logger.logPrinter
         def inner(self, name):
             func(self, name)
-            self.msg = F'Book {name} added. We have {self._books[name]} coppies of the book.'
+            Logger.msg = F'Book {name} added. We have {self._books[name]} coppies of the book.'
         return inner
 
     def LibraryReserve_book(func):
@@ -99,20 +102,20 @@ class Logger():
         def inner(self, user, book, date_from, date_to):
             result = func(self, user, book, date_from, date_to)
             if result >= 0:
-                self.msg = F'Reservation {result} included.'
+                Logger.msg = F'Reservation {result} included.'
             else:
                 if user not in self._users: 
-                    self.msg = F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '
-                    self.msg += F'User does not exist.'
+                    Logger.msg = F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '
+                    Logger.msg += F'User does not exist.'
                 elif date_from > date_to:
-                    self.msg = F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '
-                    self.msg += F'Incorrect dates.'
+                    Logger.msg = F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '
+                    Logger.msg += F'Incorrect dates.'
                 elif self._books.get(book, 0) == 0:
-                    self.msg = F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '
-                    self.msg += F'We do not have that book.'
+                    Logger.msg = F'We cannot reserve book {book} for {user} from {date_from} to {date_to}. '
+                    Logger.msg += F'We do not have that book.'
                 else:
-                   self.msg = F'We cannot reserve book {book} for {user} from {date_from} '
-                   self.msg += F'to {date_to}. We do not have enough books.' 
+                   Logger.msg = F'We cannot reserve book {book} for {user} from {date_from} '
+                   Logger.msg += F'to {date_to}. We do not have enough books.' 
             return result
         return inner
 
@@ -123,7 +126,7 @@ class Logger():
             str = 'exists'
             if not result:
                 str = 'does not exist'
-            self.msg = F'Reservation for {user} of {book} on {date} {str}.'
+            Logger.msg = F'Reservation for {user} of {book} on {date} {str}.'
             return result
         return inner
     
@@ -132,11 +135,11 @@ class Logger():
         def inner(self, user, book, date, new_user):
             result = func(self, user, book, date, new_user)
             if result:
-                self.msg = F'Reservation for {user} of {book} on {date} changed to {new_user}.'
+                Logger.msg = F'Reservation for {user} of {book} on {date} changed to {new_user}.'
             elif new_user not in self._users:
-                self.msg = F'Cannot change the reservation as {new_user} does not exist.'
+                Logger.msg = F'Cannot change the reservation as {new_user} does not exist.'
             else:
-                self.msg = F'Reservation for {user} of {book} on {date} does not exist.'
+                Logger.msg = F'Reservation for {user} of {book} on {date} does not exist.'
             return result
         return inner
 
